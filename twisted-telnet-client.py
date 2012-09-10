@@ -89,12 +89,12 @@ class TelnetClient(StatefulTelnetProtocol):
 
         cancel_defered = reactor.callLater(timeout,expectTimedOut)
 
-        def cancel_timeout(result):
+        def cancelTimeout(result):
             if not cancel_defered.cancelled and not cancel_defered.called:
                 cancel_defered.cancel()
             return result
 
-        expect_deffered.addCallback(cancel_timeout)
+        expect_deffered.addCallback(cancelTimeout)
 
         data = ''
         for line in self.output_buffer.split('\n'):
