@@ -66,7 +66,6 @@ class TelnetClient(StatefulTelnetProtocol):
         else:
             self.re_prompt = re.compile(self.factory.prompt)
 
-        print 'Received raw data:', repr(bytes)
         log.debug('Received raw telnet data: %s' % repr(bytes))
         if re.search('([Ll]ogin:\s+$)', bytes):
             self.sendLine(self.factory.username)
@@ -79,7 +78,7 @@ class TelnetClient(StatefulTelnetProtocol):
                 self.connected_deffered.unpause()
 
     def connectionMade(self):
-        """ Set rawMode since we do not reveice the 
+        """ Set rawMode since we do not receive the 
         login and password prompt in line mode. We return to default
         line mode when we detect the prompt in the received data stream
         """
