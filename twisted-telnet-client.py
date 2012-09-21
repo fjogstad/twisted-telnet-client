@@ -25,13 +25,13 @@ def connect_telnet(host,port,username,password,greeting,prompt='$',timeout=30):
     def check_connection_state(transport):
         """Since we can't use the telnet connection before we have
         logged in and the client is in line_mode 1
-        we pause the deffered here until the client is ready
-        The client unpuase the defferer when wee are logged in
+        we pause the deferred here until the client is ready
+        The client unpuase the defer when wee are logged in
         """
         if transport.protocol.line_mode == 1:
             return transport
         d.pause()
-        transport.protocol.connected_deffered= d
+        transport.protocol.connected_deferred= d
         return transport
     d.addCallback(check_connection_state)
 
@@ -48,10 +48,10 @@ class TelnetClient(StatefulTelnetProtocol):
     output_buffer = []
     search_output = []
 
-    # The deffered from the connect endpoint method.
-    # We need to tell the deffered that it can continue when we are
+    # The deferred from the connect_telnet method.
+    # We need to tell the deferred that it can continue when we are
     # ready ant when the socket are connected
-    connected_deffered = None
+    connected_deferred = None
 
     def rawDataReceived(self,bytes):
         """The login and password prompt on some systems are not
@@ -74,8 +74,8 @@ class TelnetClient(StatefulTelnetProtocol):
         elif self.re_prompt.search(bytes) or re.search(self.factory.greeting, bytes):
             log.debug('Telnet client logged in. We are ready for commands')
             self.setLineMode()
-            if self.connected_deffered:
-                self.connected_deffered.unpause()
+            if self.connected_deferred:
+                self.connected_deferred.unpause()
 
     def connectionMade(self):
         """ Set rawMode since we do not receive the 
@@ -91,8 +91,8 @@ class TelnetClient(StatefulTelnetProtocol):
             return
 
         re_expected = self.search_output[0][0]
-        search_deffered = self.search_output[0][1]
-        if not search_deffered.called:
+        search_deferred = self.search_output[0][1]
+        if not search_deferred.called:
             match = re_expected.search(line)
             if match:
                 data = '\n'.join(self.output_buffer)
@@ -101,11 +101,11 @@ class TelnetClient(StatefulTelnetProtocol):
                 # Start the timeout of the next epect message
                 if len(self.search_output) > 0:
                     re_expected = self.search_output[0][0]
-                    search_deffered = self.search_output[0][1]
+                    search_deferred = self.search_output[0][1]
                     timeout = self.search_output[0][3]
                     self.search_output[0][2] = self.getTimeoutDefer(timeout,
-                                        search_deffered, re_expected)
-                search_deffered.callback(data)
+                                        search_deferred, re_expected)
+                search_deferred.callback(data)
                 log.debug('clear telnet buffer in lineReceived. We have a match: %s' % line)
                 self.clearBuffer()
                 return
@@ -130,7 +130,7 @@ class TelnetClient(StatefulTelnetProtocol):
             # a messages. This should probaly rause an exceotion or somethine...
 
             if expect_deferred.called:
-                log.error('Expected message defferer "%s" is already called. ' % expect_deferred)
+                log.error('Expected message deferrer "%s" is already called. ' % expect_deferred)
                 log.error('This is a sign that something is wrong with the telnet client')
                 return
 
@@ -142,10 +142,10 @@ class TelnetClient(StatefulTelnetProtocol):
                 # Start the timeout of the next epect message
                 if len(self.search_output) > 0:
                     next_re_expected = self.search_output[0][0]
-                    next_search_deffered = self.search_output[0][1]
+                    next_search_deferred = self.search_output[0][1]
                     next_timeout = self.search_output[0][3]
                     self.search_output[0][2] = self.getTimeoutDefer(next_timeout,
-                                        next_search_deffered, next_re_expected)
+                                        next_search_deferred, next_re_expected)
             else:
                 msg = 'Search for message "%s" timed ' % re_expected.pattern
                 msg += 'out before the search started.'
