@@ -266,7 +266,6 @@ if __name__ == '__main__':
     username = sys.argv[2]
     password = sys.argv[3]
     prompt = '\$'
-    print username, password, host
     whenConnected = connect_telnet(host,port,username,password,prompt)
     whenConnected.addCallback(testProtocol)
     reactor.run()
